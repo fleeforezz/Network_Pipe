@@ -1,0 +1,69 @@
+services:
+  traefik:
+    image: traefik:3.6.6 # or traefik:v3.3 to pin a version
+    container_name: traefik
+    restart: unless-stopped
+
+    security_opt:
+      - no-new-privileges:true # helps to increase security
+
+    networks:
+      - traefik-proxy
+
+    dns:
+      - 10.0.1.91 # your pi-hole Ip
+      - 1.1.1.1 # fall-back DNS if your pi-hole fail
+
+    command:
+      - --providers.docker=true
+      - metrics.prometheus=true
+      - --entrypoints.metrics.address=:8082
+
+    ports:
+      - 80:80
+      - 443:443
+      - 8082:8082
+      # - 10000:10000 # optional
+      # - 33073:33073 # optional
+
+    environment:
+      - CF_DNS_API_TOKEN_FILE=/run/secrets/cloudflare_api_token # token file is the proper way to do it
+      - TRAEFIK_DASHBOARD_CREDENTIALS=/run/secrets/basic_auth_users # traefik ui dashboard password
+
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config/traefik.yaml:/traefik.yaml:ro
+      - ./config:/config:ro
+      - ./acme/acme.json:/acme.json
+      - ./logs:/var/log/traefik
+
+    labels:
+      - "traefik.enable=true"
+
+      # Dashboard router
+      - "traefik.http.routers.traefik.rule=Host(`traefik.your.domain`)"
+      - "traefik.http.routers.traefik.entrypoints=https"
+      - "traefik.http.routers.traefik.tls.certresolver=cloudflare"
+
+      # Tell Traefik to use internal API
+      - "traefik.http.routers.traefik.service=api@internal"
+
+      # Basic auth
+      - "traefik.http.routers.traefik.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/basic_auth_users"
+
+    secrets:
+      - cloudflare_api_token
+      - basic_auth_users
+
+networks:
+  traefik-proxy:
+    external: true # or comment this line to auto create the network
+
+secrets:
+  cloudflare_api_token:
+    file: ./secrets/cf_token.txt
+
+  basic_auth_users:
+    file: ./secrets/traefik_users.txt

@@ -1,0 +1,20 @@
+############
+# SERVICES #
+############
+http:
+  services:
+  #---- Portainer Service ----#
+    portainer:
+      loadBalancer:
+        servers:
+          - url: "https://dev.local:9443" # Pi-hole local DNS
+        passHostHeader: true
+        serversTransport: insecureTransport
+
+  #---- TrueNas Service ----#
+    truenas:
+      loadBalancer:
+        servers:
+          - url: "http://truenas.local:80"
+        passHostHeader: true
+        serversTransport: insecureTransport

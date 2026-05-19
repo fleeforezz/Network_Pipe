@@ -1,0 +1,23 @@
+http:
+  routers:
+  #---- Portainer Router ----#
+    portainer:
+      entryPoints:
+        - "https"
+      rule: "Host(`portainer.your.domain`)"
+      middlewares:
+        - default-chain
+      tls:
+        certResolver: cloudflare
+      service: portainer
+
+  #---- Truenas Router ----#
+    portainer:
+      entryPoints:
+        - "https"
+      rule: "Host(`truenas.your.domain`)"
+      middlewares:
+        - default-chain
+      tls:
+        certResolver: cloudflare
+      service: truenas
