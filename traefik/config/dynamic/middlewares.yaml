@@ -1,0 +1,71 @@
+http:
+  middlewares:
+    # ========================
+    # GLOBAL DEFAULT (SAFE)
+    # ========================
+    default-security:
+      headers:
+        contentTypeNosniff: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        permissionsPolicy: "geolocation=(), camera=(), microphone=()"
+
+    gzip:
+      compress: {}
+
+    # ========================
+    # CHAIN (REFERENCE ONLY)
+    # ========================
+    default-chain:
+      chain:
+        middlewares:
+          - default-security
+#          - forward-auth
+          - gzip
+
+    # Optional but recommended
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
+
+    # ========================
+    # AUTH (for dashboard/admin)
+    # ========================
+    basic-auth:
+      basicAuth:
+        usersFile: "/run/secrets/basic_auth_users"
+
+    # ========================
+    # API / CORS
+    # ========================
+    cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        accessControlAllowHeaders:
+          - "*"
+        accessControlAllowOriginList:
+          - "http://dev.local:8082"
+        accessControlAllowCredentials: true
+        addVaryHeader: true
+
+    # ========================
+    # STRICT CSP (OPTIONAL)
+    # ========================
+    strict-csp:
+      headers:
+        contentSecurityPolicy: "default-src 'self'; img-src 'self' data: https:; script-src 'self'; style-src 'self' 'unsafe-inline';"
+
+    # ========================
+    # RELAXED CSP (FOR APPS)
+    # ========================
+    relaxed-csp:
+      headers:
+        contentSecurityPolicy: "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;"
